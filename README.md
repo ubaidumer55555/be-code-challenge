@@ -27,13 +27,13 @@
 
 ## Design Patterns
 
-- **Dependency Injection:** Uses Nest's DI container to provide services, repositories, and other providers. This keeps components loosely coupled and easy to test.
-- **Controller → Service → Repository (Layered):** Controllers handle HTTP, services contain business logic, and repositories encapsulate data access (TypeORM). This separation improves clarity and single-responsibility.
-- **Repository Pattern:** All DB operations are centralized in repository classes (using TypeORM), making queries and transactional behavior easier to manage.
-- **DTOs (Data Transfer Objects):** Request/response shapes are defined with DTOs to validate and document API contracts.
-- **Guard & Strategy (Auth):** Authentication uses a guard + strategy approach (JWT) to separate auth concerns from business logic.
-- **Decorator (Custom):** Custom decorators (e.g., roles) are used for declarative access control.
-- **Exception Handling:** Uses Nest's HTTP exceptions (e.g., `NotFoundException`) to standardize error responses.
+- **Dependency Injection:** Nest's built-in DI is used to provide services, repositories and other providers (keeps components loosely coupled and easy to test).
+- **Modular Design (Feature Modules):** The codebase is organized into modules (`user`, `task`, `invite`, `database`), keeping responsibilities isolated and making the app extensible and maintainable.
+- **Singleton (Module/provider scope):** Providers registered in Nest modules (for example `DatabaseService`) are singletons by default and used that way here (single instance per application lifecycle).
+- **Layered (Controller → Service → Repository):** Controllers handle HTTP, services contain business logic, and repositories encapsulate persistence (TypeORM). This enforces single responsibility per layer.
+- **Repository Pattern:** Data access is centralized in repository classes (`*.repository.ts`), abstracting TypeORM calls and making DB operations easier to test and change.
+- **DTOs (Data Transfer Objects):** DTO classes define and validate request shapes (via `class-validator`) and annotate Swagger docs (`@ApiProperty`).
+- **Auth: Guard + Strategy + Decorator:** Authentication uses a JWT strategy with a guard, and authorization is expressed via custom decorators (`@Roles`) plus a role guard for declarative access control.
 
 ## Run Locally (step-by-step)
 
@@ -92,28 +92,11 @@ Design goals:
 
 ## Swagger (API documentation)
 
-To add Swagger docs for public and private routes:
+Swagger (OpenAPI) provides an interactive UI to explore and test the application's HTTP endpoints. In this project Swagger is configured during app bootstrap and the docs are served at:
 
-1. Install Swagger packages if not present:
+http://localhost:3000/api-docs
 
-```powershell
-yarn add @nestjs/swagger swagger-ui-express
-```
-
-2. In `src/main.ts` add a Swagger setup block during bootstrap (example):
-
-```ts
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-const config = new DocumentBuilder()
-  .setTitle('API')
-  .setVersion('1.0')
-  .addBearerAuth()
-  .build();
-const document = SwaggerModule.createDocument(app, config);
-SwaggerModule.setup('api-docs', app, document);
-```
-
-3. On each controller add `@ApiTags('tasks')`, and use `@ApiOperation()` and `@ApiResponse()` decorators on handlers to document endpoints and response types.
+Open that URL after starting the server (`yarn run start:dev` by default) to view request/response schemas, examples, and to try API calls.
 
 ## Answers to exercise questions (short)
 
