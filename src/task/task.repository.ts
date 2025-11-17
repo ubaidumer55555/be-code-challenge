@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { Repository, FindManyOptions } from 'typeorm';
 import { Task } from 'src/database/entity/task.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ITaskCreate } from './interface/task.interface';
@@ -11,8 +11,8 @@ export class TaskRepository {
     private readonly repo: Repository<Task>,
   ) {}
 
-  findAllTasks(userId: string) {
-    return this.repo.find({ where: { userId } });
+  findAllTasks(whereClause: FindManyOptions<Task>) {
+    return this.repo.findAndCount(whereClause);
   }
 
   findTaskById(id: string, userId: string) {

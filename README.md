@@ -25,6 +25,126 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+## Design Patterns
+
+- **Dependency Injection:** Uses Nest's DI container to provide services, repositories, and other providers. This keeps components loosely coupled and easy to test.
+- **Controller → Service → Repository (Layered):** Controllers handle HTTP, services contain business logic, and repositories encapsulate data access (TypeORM). This separation improves clarity and single-responsibility.
+- **Repository Pattern:** All DB operations are centralized in repository classes (using TypeORM), making queries and transactional behavior easier to manage.
+- **DTOs (Data Transfer Objects):** Request/response shapes are defined with DTOs to validate and document API contracts.
+- **Guard & Strategy (Auth):** Authentication uses a guard + strategy approach (JWT) to separate auth concerns from business logic.
+- **Decorator (Custom):** Custom decorators (e.g., roles) are used for declarative access control.
+- **Exception Handling:** Uses Nest's HTTP exceptions (e.g., `NotFoundException`) to standardize error responses.
+
+## Run Locally (step-by-step)
+
+1. Clone the repo and install dependencies
+
+```powershell
+git clone <repo_url>
+cd be-code-challenge
+yarn install
+```
+
+2. Create environment variables (see list below). For local development you can create a `.env` file in project root.
+
+3. Start the app in watch mode
+
+```powershell
+yarn run start:dev
+```
+
+4. The server will listen on `PORT` (default `3000`). The application seeds an initial admin user on startup.
+
+Notes:
+
+- The app uses TypeORM with `synchronize: true` for development. For production, disable `synchronize` and use migrations.
+
+## Env variables
+
+- `DATABASE_URL` (required) — full Postgres URL, e.g. `postgres://user:password@localhost:5432/dbname`
+- `JWT_SECRET` (required) — secret used to sign JWTs
+- `PORT` (optional) — port to run the server, default `3000`
+
+## Seed & Migrations
+
+- Seed: the project seeds an initial admin user automatically on startup via `DatabaseService.seedUsers()`.
+- Migrations: this starter currently uses `synchronize: true`. To switch to migrations for production:
+  - Set `synchronize: false` in `DatabaseModule` configuration.
+
+## Developer notes — modules & structure
+
+- `src/main.ts`: App bootstrap and global setup.
+- `src/database`: Database module, entities, and seed service. `DatabaseModule` configures TypeORM and runs seeding on init.
+- `src/user`, `src/task`, `src/invite`: Feature modules following Controller → Service → Repository pattern.
+- `src/*.dto.ts`: DTOs define request/response shapes and validation rules.
+- `src/*/repository.ts`: Encapsulate DB access using TypeORM repository API.
+- `src/util`: Helpers, enums, and custom decorators (auth guard, role decorator) to keep cross-cutting concerns centralized.
+
+Design goals:
+
+- Single responsibility per layer for easier testing and maintenance.
+- Keep controllers thin (HTTP handling only), services implement business rules, repositories handle persistence.
+- Use typed DTOs and enums to keep runtime validations and API contracts explicit.
+
+## API & Types
+
+- All public API controllers should declare explicit return types. Services and repositories should use TypeScript types and interfaces.
+
+## Swagger (API documentation)
+
+To add Swagger docs for public and private routes:
+
+1. Install Swagger packages if not present:
+
+```powershell
+yarn add @nestjs/swagger swagger-ui-express
+```
+
+2. In `src/main.ts` add a Swagger setup block during bootstrap (example):
+
+```ts
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+const config = new DocumentBuilder()
+  .setTitle('API')
+  .setVersion('1.0')
+  .addBearerAuth()
+  .build();
+const document = SwaggerModule.createDocument(app, config);
+SwaggerModule.setup('api-docs', app, document);
+```
+
+3. On each controller add `@ApiTags('tasks')`, and use `@ApiOperation()` and `@ApiResponse()` decorators on handlers to document endpoints and response types.
+
+## Answers to exercise questions (short)
+
+- How are roles enforced? Using a `RoleGuard` and a `roles` decorator applied on controllers/routes.
+- How does pagination work? The `getAllTasks` endpoint accepts `offset` and `limit` and the repository uses `findAndCount` with `skip`/`take`.
+- How are passwords stored? Passwords are hashed with Argon2 via `hashPassword` helper before saving.
+
+## Code hygiene — comments & formatting
+
+- The codebase should not contain inline or block comments in production files. Use clean, self-documenting code and small functions instead of commented explanations.
+- To enforce formatting and simple lint fixes run:
+
+```powershell
+yarn run format
+yarn run lint
+```
+
+- (Optional) To find comments in TypeScript files locally (preview before removing):
+
+```powershell
+Select-String -Path .\src\**\*.ts -Pattern "(^\s*//)|(/\*)" -AllMatches
+```
+
+- If you want to remove comments automatically, back up your work first. A safer approach is to fix code and re-run linters rather than stripping comments blindly.
+
+## Next steps / Recommendations
+
+- Add TypeORM migrations for production workflows and disable `synchronize`.
+- Implement Swagger decorators across controllers to generate complete API docs.
+- Consider adding integration tests for auth flows and paginated endpoints.
+
 ## Project setup
 
 ```bash

@@ -1,13 +1,31 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { TaskRepository } from './task.repository';
 import { CreateTaskDto, UpdateTaskDto } from './dto/task.dto';
+import { UserRole } from 'src/util/enum/user-role.enum';
+import { getAllTasksWhereClause } from './utils/where-clause/get-all-tasks.where-clause';
 
 @Injectable()
 export class TaskService {
   constructor(private readonly taskRepository: TaskRepository) {}
 
-  async getAllTasks(userId: string) {
-    return await this.taskRepository.findAllTasks(userId);
+  async getAllTasks(
+    role: UserRole,
+    userId: string,
+    status?: string,
+    email?: string,
+    offset = 0,
+    limit = 10,
+  ) {
+    const whereClause = getAllTasksWhereClause(
+      role,
+      userId,
+      status,
+      email,
+      offset,
+      limit,
+    );
+    const [data, count] = await this.taskRepository.findAllTasks(whereClause);
+    return { data, count };
   }
 
   async getTaskById(id: string, userId: string) {
